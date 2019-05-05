@@ -1,1 +1,61 @@
+---
+title: "tidyverse recipe "
+author: "Rob Welk"
+date: "4/30/2019"
+output: html_document
+---
+# Assignment
+Using one or more TidyVerse packages, and any dataset from fivethirtyeight.com or Kaggle, create a programming sample “vignette”
 
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+# Packages
+```{r, message=FALSE}
+library(tidyverse)
+```
+
+# Load data
+```{r}
+suicide <- read.csv('worldwidesuicide.csv') %>% as_tibble() 
+
+```
+
+# Rename variable names
+clean the variable names using rename()
+```{r}
+suicide <- suicide %>% 
+  rename(country=ï..country, HDI=HDI.for.year,    gdp=gdp_for_year....,gdp_capita=gdp_per_capita....)
+```
+
+# About purrr
+Purr is a package of tidyverse and is used primarily for iterating over vecotrs.  It is similar is functionality to members of the apply family of base R, except output structure is predictable and  
+
+
+# Example - linear model 
+The output of a linear model is a list, containing elements such as coefficients, standard error, and R-squared.  Using purrr, in conjunction with other tidyverse packages, variables can be aggregated  and compared.  
+
+## Rates as a function of gdp - by year
+```{r}
+# Using tidyverse piping, data gets split by year - the output is a list.  purrr's map() function iterates over the list, producing a linear model of suicide rate as a function of per capita gdp.  The tilde in front of lm() acts as a shortcut.
+model <- suicide %>% 
+  split(.$year) %>% 
+  map(~lm(suicides.100k.pop ~ gdp_capita, data = .))
+
+# Next map() is used again to iterate throughout the list of linear models to store lm() summary statistics.  This gets directly piped into map_dbl() to get a vector of the r-squared statistic for each year.
+r.sq <- model %>% 
+  map(summary) %>% 
+  map_dbl('r.squared') %>% 
+  data.frame
+
+# The dataframe results can then be piped into ggplot to visualize time series trends in the correlation of suicide and gpd   
+r.sq %>% 
+  ggplot(aes(x=row.names(r.sq),y=.)) + 
+    geom_point() + xlab('Year') + 
+    ylab('R-squared') + 
+    ggtitle("R-squared for suicide rate ~ per capita GDP, 1986-2016") +
+    scale_x_discrete(breaks=seq(from="1986",to="2016",by=2))
+
+
+```
