@@ -64,3 +64,15 @@ To keep only age, sex,cp variable we can pass the data disease and age, sex,cp t
 df<- select(disease, c("age","sex","cp"))
 head(df)
 ```
+
+## edit - rob welk
+Using select() in dplyr as well as ggplot() we can create a scatter plot of cholesterol levels as a function of age highlighting differences in men and women.
+```{r}
+disease %>% 
+  select(age, sex, chol) %>% 
+  ggplot(aes(x=age,y=chol,color=as.factor(sex))) +
+    geom_point() +
+    xlab('Age') + 
+    ylab('Cholesterol') + 
+    labs('Sex')
+```
